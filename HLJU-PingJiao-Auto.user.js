@@ -515,14 +515,14 @@
         '#auto-eval-panel .ae-switch-row:hover{background:#f1f5f9;}' +
         '#auto-eval-panel .ae-switch-row .ae-switch-label{font-size:12px;color:#475569;font-weight:500;}' +
         '#auto-eval-panel .ae-switch-row .ae-switch-label span{display:block;font-size:10px;color:#94a3b8;margin-top:1px;}' +
-        '#auto-eval-panel .ae-switch{position:relative;width:38px;height:20px;flex-shrink:0;}' +
-        '#auto-eval-panel .ae-switch input{opacity:0;width:0;height:0;}' +
-        '#auto-eval-panel .ae-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:10px;' +
-        'cursor:pointer;transition:.3s;}' +
-        '#auto-eval-panel .ae-slider:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;' +
-        'background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 4px rgba(0,0,0,.15);}' +
-        '#auto-eval-panel .ae-switch input:checked + .ae-slider{background:linear-gradient(135deg,#10b981,#059669);}' +
-        '#auto-eval-panel .ae-switch input:checked + .ae-slider:before{transform:translateX(18px);}' +
+        // 方块亮灭指示器
+        '#auto-eval-panel .ae-toggle{width:42px;height:24px;border-radius:7px;flex-shrink:0;cursor:pointer;' +
+        'background:#e2e8f0;border:1px solid #cbd5e1;transition:.25s;position:relative;}' +
+        '#auto-eval-panel .ae-toggle::after{content:"";position:absolute;width:10px;height:10px;' +
+        'border-radius:50%;background:#94a3b8;top:50%;left:50%;transform:translate(-50%,-50%);transition:.25s;}' +
+        '#auto-eval-panel .ae-toggle.on{background:linear-gradient(135deg,#10b981,#059669);' +
+        'border-color:#059669;box-shadow:0 2px 10px rgba(16,185,129,.35);}' +
+        '#auto-eval-panel .ae-toggle.on::after{background:#fff;box-shadow:0 0 6px rgba(255,255,255,.6);}' +
         // 折叠区
         '#auto-eval-panel .ae-adv-toggle{display:flex;align-items:center;gap:5px;font-size:12px;' +
         'color:#6366f1;cursor:pointer;font-weight:500;padding:6px 0;transition:.2s;}' +
@@ -584,7 +584,7 @@
         '</div>' +
         '<div class="ae-switch-row" id="ae-auto-row">' +
           '<div class="ae-switch-label">自动提交<span>关闭则填完暂停等你核验</span></div>' +
-          '<label class="ae-switch"><input type="checkbox" id="ae-auto-submit"><span class="ae-slider"></span></label>' +
+          '<div class="ae-toggle" id="ae-toggle"></div>' +
         '</div>' +
         '<div class="ae-adv-toggle" id="ae-adv-toggle">' +
           '<span class="ae-arrow">▾</span> 评语设置' +
@@ -615,13 +615,16 @@
     };
     document.getElementById('ae-start').onclick = start;
     document.getElementById('ae-stop').onclick = stop;
-    // 自动提交开关（点整行也能切换）
-    const autoChk = document.getElementById('ae-auto-submit');
-    document.getElementById('ae-auto-row').onclick = function (e) {
-      if (e.target.tagName !== 'INPUT') {
-        autoChk.checked = !autoChk.checked;
-      }
-      CONFIG.mode = autoChk.checked ? 'auto' : 'manual';
+    // 自动提交开关（点整行切换方块亮灭）
+    const toggle = document.getElementById('ae-toggle');
+    function syncToggle() {
+      if (CONFIG.mode === 'auto') toggle.classList.add('on');
+      else toggle.classList.remove('on');
+    }
+    syncToggle();
+    document.getElementById('ae-auto-row').onclick = function () {
+      CONFIG.mode = CONFIG.mode === 'auto' ? 'manual' : 'auto';
+      syncToggle();
       log('模式切换:', CONFIG.mode);
     };
     // 评分档位
@@ -837,8 +840,11 @@
 
   // 同步面板状态（从配置填充）
   function syncPanelState() {
-    const autoChk = document.getElementById('ae-auto-submit');
-    if (autoChk) autoChk.checked = CONFIG.mode === 'auto';
+    const toggle = document.getElementById('ae-toggle');
+    if (toggle) {
+      if (CONFIG.mode === 'auto') toggle.classList.add('on');
+      else toggle.classList.remove('on');
+    }
     const segBtns = document.querySelectorAll('#ae-score-seg button');
     if (segBtns.length) {
       segBtns.forEach(function (btn) {
